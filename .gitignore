@@ -1,0 +1,45 @@
+# Xcode
+*.pbxuser
+*.perspectivev3
+*.xcworkspace
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.xcarchive
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+*.xcodeproj/
+Package.resolved
+
+# Vim
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.o
+*.a
+*.so
+*.dylib
+
+# Temporary files
+*.tmp
+*.bak
+*~

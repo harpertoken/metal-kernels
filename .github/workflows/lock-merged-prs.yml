@@ -1,0 +1,19 @@
+---
+name: Lock Merged PRs
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  lock:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Lock PR
+        # Automatically uses the current repo; equivalent to 'bniladridas/metal-kernels'
+        run: gh pr lock ${{ github.event.pull_request.number }} --repo ${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

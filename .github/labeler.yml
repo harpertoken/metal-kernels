@@ -27,6 +27,12 @@ refactor:
   - 'refactor'
   - 'cleanup'
 
+question:
+  - 'question'
+
+discussion:
+  - 'discussion'
+
 good first issue:
   - 'good first issue'
 
@@ -54,5 +60,4 @@ macOS:
   - 'macOS'
 
 tvOS:
-
   - 'tvOS'

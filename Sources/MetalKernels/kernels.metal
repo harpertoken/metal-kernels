@@ -177,6 +177,7 @@ kernel void softmax(
     device float* shared_max [[buffer(2)]],
     device float* shared_sum [[buffer(3)]],
     device const uint& n [[buffer(4)]],
+    device float* temp_exp [[buffer(5)]],
     threadgroup float* local_data [[threadgroup(0)]],
     uint tid [[thread_position_in_threadgroup]],
     uint bid [[threadgroup_position_in_grid]],
@@ -207,9 +208,8 @@ kernel void softmax(
     for (uint i = tid; i < n; i += group_size) {
         float exp_val = exp(input[i] - shared_max[0]);
         thread_sum += exp_val;
-        // Store exp_val back to input for reuse in phase 3
-        // This avoids having to recompute exp values
-        input[i] = exp_val;
+        // Store exp_val in temp buffer for reuse in phase 3
+        temp_exp[i] = exp_val;
     }
     
     local_data[tid] = thread_sum;
@@ -227,7 +227,7 @@ kernel void softmax(
     
     // Phase 3: Compute final softmax values using stored exp values
     for (uint i = tid; i < n; i += group_size) {
-        output[i] = input[i] / shared_sum[0];
+        output[i] = temp_exp[i] / shared_sum[0];
     }
 }
 

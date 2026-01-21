@@ -1,0 +1,59 @@
+---
+name: Label Issues
+
+on:
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply issue labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const text = (
+              context.payload.issue.title +
+              "\n" +
+              (context.payload.issue.body || "")
+            ).toLowerCase();
+
+            const rules = {
+              bug: ["bug", "fix", "crash"],
+              feature: ["feature", "add"],
+              perf: ["perf", "performance"],
+              docs: ["docs", "documentation"],
+              test: ["test", "tests"],
+              refactor: ["refactor", "cleanup"],
+              question: ["question", "how"],
+              discussion: ["discussion"],
+              "good first issue": ["good first issue"],
+              "help wanted": ["help wanted"],
+              rnn: ["lstm", "gru"],
+              transformer: ["attention", "transformer"],
+              quantization: ["quantization"],
+              physics: ["physics"],
+              ios: ["ios"],
+              macos: ["macos"],
+              tvos: ["tvos"]
+            };
+
+            const labels = Object.entries(rules)
+              .filter(([, keywords]) =>
+                keywords.some((k) => text.includes(k))
+              )
+              .map(([label]) => label);
+
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.issue.number,
+                labels
+              });
+            }

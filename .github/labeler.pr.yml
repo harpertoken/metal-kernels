@@ -1,0 +1,15 @@
+---
+# File-path based labels for pull requests only
+
+docs:
+  - "README.md"
+  - "QUICK_REFERENCE.md"
+  - "LABELS.md"
+  - "CONTRIBUTING.md"
+  - "BETA.md"
+
+source:
+  - "Sources/**"
+
+metal:
+  - "**/*.metal"

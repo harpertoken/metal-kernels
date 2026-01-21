@@ -183,12 +183,17 @@ kernel void softmax(
     uint group_size [[threads_per_threadgroup]]
 ) {
     // Phase 1: Find maximum using parallel reduction
-    float local_max = (tid < n) ? input[tid] : -INFINITY;
+    float local_max = -INFINITY;
+    // Each thread processes multiple elements with striding
+    for (uint i = tid; i < n; i += group_size) {
+        local_max = max(local_max, input[i]);
+    }
+    
     local_data[tid] = local_max;
     threadgroup_barrier(mem_flags::mem_threadgroup);
     
     for (uint stride = group_size / 2; stride > 0; stride >>= 1) {
-        if (tid < stride && tid + stride < n) {
+        if (tid < stride) {
             local_data[tid] = max(local_data[tid], local_data[tid + stride]);
         }
         threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -198,12 +203,20 @@ kernel void softmax(
     threadgroup_barrier(mem_flags::mem_device);
     
     // Phase 2: Compute exp and sum using parallel reduction
-    float exp_val = (tid < n) ? exp(input[tid] - shared_max[0]) : 0.0f;
-    local_data[tid] = exp_val;
+    float thread_sum = 0.0f;
+    for (uint i = tid; i < n; i += group_size) {
+        float exp_val = exp(input[i] - shared_max[0]);
+        thread_sum += exp_val;
+        // Store exp_val back to input for reuse in phase 3
+        // This avoids having to recompute exp values
+        input[i] = exp_val;
+    }
+    
+    local_data[tid] = thread_sum;
     threadgroup_barrier(mem_flags::mem_threadgroup);
     
     for (uint stride = group_size / 2; stride > 0; stride >>= 1) {
-        if (tid < stride && tid + stride < n) {
+        if (tid < stride) {
             local_data[tid] += local_data[tid + stride];
         }
         threadgroup_barrier(mem_flags::mem_threadgroup);
@@ -212,9 +225,9 @@ kernel void softmax(
     if (tid == 0) shared_sum[0] = local_data[0];
     threadgroup_barrier(mem_flags::mem_device);
     
-    // Phase 3: Compute final softmax values (reuse exp_val to avoid recomputation)
-    if (tid < n) {
-        output[tid] = exp_val / shared_sum[0];
+    // Phase 3: Compute final softmax values using stored exp values
+    for (uint i = tid; i < n; i += group_size) {
+        output[i] = input[i] / shared_sum[0];
     }
 }
 
